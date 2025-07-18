@@ -1,0 +1,1305 @@
+# Created by: Fernando Carnauba
+# Last modified: 18 July 2025
+
+# This file loads data from 2009 to 2019 on ENEM microdata and items
+# Only a small number of relevant variables are loaded, and the files are
+# saved as fst for fast reading
+
+
+
+library(tidyverse)
+library(fst)
+set.seed(11)
+rm(list = ls())
+fraction <- 1 #how many times smaller will be the picked sample
+
+#--------------------------------------------------------
+#           MICRODADOS 2020
+#--------------------------------------------------------
+
+#carrega os microdados da prova e questionário
+setwd("D:/4. Dissertacao/2. Original data/MEC data/microdados_enem2020/DADOS")
+
+ENEM_2020 <- data.table::fread(input='MICRODADOS_ENEM_2020.csv',
+                               integer64='character',
+                               skip=0,  #Ler do inicio
+                               nrow=-1, #Ler todos os registros
+                               na.strings = "", 
+                               showProgress = TRUE,
+                               select = c("NU_INSCRICAO", 
+                                          "CO_PROVA_MT", 
+                                          "TX_RESPOSTAS_MT",
+                                          "TX_GABARITO_MT",
+                                          "TP_COR_RACA",
+                                          "TP_ST_CONCLUSAO",
+                                          "TP_ESCOLA",
+                                          "NU_NOTA_CN",
+                                          "NU_NOTA_CH",
+                                          "NU_NOTA_LC",
+                                          "NU_NOTA_MT"))
+
+#standardize variables' names
+names(ENEM_2020)[names(ENEM_2020) == 'NU_NOTA_CN'] <- 'NOTA_CN'
+names(ENEM_2020)[names(ENEM_2020) == 'NU_NOTA_CH'] <- 'NOTA_CH'
+names(ENEM_2020)[names(ENEM_2020) == 'NU_NOTA_LC'] <- 'NOTA_LC'
+names(ENEM_2020)[names(ENEM_2020) == 'NU_NOTA_MT'] <- 'NOTA_MT'
+
+
+
+#label Raça
+ENEM_2020$TP_COR_RACA <- factor(ENEM_2020$TP_COR_RACA, levels = c(0,1,2,3,4,5),
+                                labels=c('Não declarado',
+                                         'Branca','Preta',
+                                         'Parda','Amarela',
+                                         'Indígena'))
+
+#label School
+ENEM_2020$TP_ESCOLA <- factor(ENEM_2020$TP_ESCOLA, levels = c(1,2,3,4),
+                              labels=c('Não respondeu',
+                                       'Pública',
+                                       'Privada',
+                                       'Exterior'))
+
+
+# GETTING A SMALL SUBSAMPLE (10% of non-missing 12th graders)
+#ENEM_2020 <- na.omit(ENEM_2020)
+ENEM_2020 <- sample_n(ENEM_2020, nrow(ENEM_2020)/fraction)
+
+# ADDING ANO
+ENEM_2020$ano <- 2020
+
+# SAVE file in compressed mode
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(ENEM_2020, "data/r_full_subsamples/ENEM_2020", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#           ITENS 2020
+#--------------------------------------------------------
+
+
+# Carrega os dados das questoes
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2020/DADOS")
+itens_2020 <- data.table::fread(input='ITENS_PROVA_2020.csv',integer64='character')
+
+itens_2020$SG_AREA <- factor(itens_2020$SG_AREA, levels = c('CH','CN','LC','MT'),  labels=c('Ciências Humanas','Ciências da Natureza','Linguagens e Códigos','Matemática'))
+itens_2020$TP_LINGUA <- factor(itens_2020$TP_LINGUA, levels = c(0,1),  labels=c('Inglês','Espanhol'))
+itens_2020$IN_ITEM_ADAPTADO <- factor(itens_2020$IN_ITEM_ADAPTADO, levels = c(1,0),  labels=c('Sim','Não'))
+
+#keep only math items
+itens_2020 <-itens_2020[itens_2020$SG_AREA == "Matemática", ]
+itens_2020   <- subset(itens_2020, select = c(CO_POSICAO, SG_AREA, 
+                                              CO_ITEM,TX_GABARITO,
+                                              CO_HABILIDADE, TX_COR, 
+                                              CO_PROVA))
+itens_2020$ano <- 2020
+
+#write fast-reading file
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(itens_2020, "data/r_full_subsamples/itens_2020", compress = 50, uniform_encoding = TRUE)
+
+
+
+#--------------------------------------------------------
+#     MICRODADOS 2019
+#--------------------------------------------------------
+
+#carrega os microdados da prova e questionário
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2019/DADOS")
+ENEM_2019 <- data.table::fread(input='MICRODADOS_ENEM_2019.csv',
+                               integer64='character',
+                               skip=0,  #Ler do inicio
+                               nrow=-1, #Ler todos os registros
+                               na.strings = "", 
+                               showProgress = TRUE,
+                               select = c("NU_INSCRICAO", 
+                                          "CO_PROVA_MT", 
+                                          "TX_RESPOSTAS_MT",
+                                          "TX_GABARITO_MT",
+                                          "TP_COR_RACA",
+                                          "TP_ST_CONCLUSAO",
+                                          "TP_ESCOLA",
+                                          "NU_NOTA_CN",
+                                          "NU_NOTA_CH",
+                                          "NU_NOTA_LC",
+                                          "NU_NOTA_MT"))
+
+#standardize variables' names
+names(ENEM_2019)[names(ENEM_2019) == 'NU_NOTA_CN'] <- 'NOTA_CN'
+names(ENEM_2019)[names(ENEM_2019) == 'NU_NOTA_CH'] <- 'NOTA_CH'
+names(ENEM_2019)[names(ENEM_2019) == 'NU_NOTA_LC'] <- 'NOTA_LC'
+names(ENEM_2019)[names(ENEM_2019) == 'NU_NOTA_MT'] <- 'NOTA_MT'
+
+#label Raça
+ENEM_2019$TP_COR_RACA <- factor(ENEM_2019$TP_COR_RACA, levels = c(0,1,2,3,4,5,6),
+                                labels=c('Não declarado',
+                                         'Branca','Preta',
+                                         'Parda','Amarela',
+                                         'Indígena',
+                                         'Não dispõe da informação'))
+
+#label School
+ENEM_2019$TP_ESCOLA <- factor(ENEM_2019$TP_ESCOLA, levels = c(1,2,3,4),
+                              labels=c('Não respondeu',
+                                       'Pública',
+                                       'Privada',
+                                       'Exterior'))
+
+# GETTING A SMALL SUBSAMPLE (10% of non-missing 12th graders)
+#ENEM_2019 <- na.omit(ENEM_2019)
+ENEM_2019 <- sample_n(ENEM_2019, nrow(ENEM_2019)/fraction)
+
+# ADDING ANO
+ENEM_2019$ano <- 2019
+
+# SAVE file in compressed mode
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(ENEM_2019, "data/r_full_subsamples/ENEM_2019", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#           ITENS 2019
+#--------------------------------------------------------
+
+# Carrega os dados das questoes
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2019/DADOS")
+itens_2019 <- data.table::fread(input='ITENS_PROVA_2019.csv',integer64='character')
+
+
+itens_2019$SG_AREA <- factor(itens_2019$SG_AREA, levels = c('CH','CN','LC','MT'),  
+                             labels=c('Ciências Humanas','Ciências da Natureza','Linguagens e Códigos','Matemática'))
+itens_2019$TP_LINGUA <- factor(itens_2019$TP_LINGUA, levels = c(0,1),  labels=c('Inglês','Espanhol'))
+itens_2019$IN_ITEM_ADAPTADO <- factor(itens_2019$IN_ITEM_ADAPTADO, levels = c(1,0),  labels=c('Sim','Não'))
+
+#keep only math items and relevant variables
+itens_2019 <-itens_2019[itens_2019$SG_AREA == "Matemática", ]
+itens_2019$ano <- 2019
+itens_2019   <- subset(itens_2019, select = -c(TP_LINGUA, IN_ITEM_ADAPTADO))
+
+#write fast-reading file
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(itens_2019, "data/r_full_subsamples/itens_2019", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#     MICRODADOS 2018
+#--------------------------------------------------------
+
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2018/DADOS")
+ENEM_2018 <- data.table::fread(input='MICRODADOS_ENEM_2018.csv',
+                               integer64='character',
+                               skip=0,  #Ler do inicio
+                               nrow=-1, #Ler todos os registros
+                               na.strings = "", 
+                               showProgress = TRUE,
+                               select = c("NU_INSCRICAO", 
+                                          "CO_PROVA_MT", 
+                                          "TX_RESPOSTAS_MT",
+                                          "TX_GABARITO_MT",
+                                          "TP_COR_RACA",
+                                          "TP_ST_CONCLUSAO",
+                                          "TP_ESCOLA",
+                                          "NU_NOTA_CN",
+                                          "NU_NOTA_CH",
+                                          "NU_NOTA_LC",
+                                          "NU_NOTA_MT"))
+
+#standardize variables' names
+names(ENEM_2018)[names(ENEM_2018) == 'NU_NOTA_CN'] <- 'NOTA_CN'
+names(ENEM_2018)[names(ENEM_2018) == 'NU_NOTA_CH'] <- 'NOTA_CH'
+names(ENEM_2018)[names(ENEM_2018) == 'NU_NOTA_LC'] <- 'NOTA_LC'
+names(ENEM_2018)[names(ENEM_2018) == 'NU_NOTA_MT'] <- 'NOTA_MT'
+
+#label Raça
+ENEM_2018$TP_COR_RACA <- factor(ENEM_2018$TP_COR_RACA, levels = c(0,1,2,3,4,5,6),
+                                labels=c('Não declarado',
+                                         'Branca','Preta',
+                                         'Parda','Amarela',
+                                         'Indígena',
+                                         'Não dispõe da informação'))
+
+#label School
+ENEM_2018$TP_ESCOLA <- factor(ENEM_2018$TP_ESCOLA, levels = c(1,2,3,4),
+                              labels=c('Não respondeu',
+                                       'Pública',
+                                       'Privada',
+                                       'Exterior'))
+
+# GETTING A SMALL SUBSAMPLE (10% of non-missing 12th graders)
+#ENEM_2018 <- na.omit(ENEM_2018)
+ENEM_2018 <- sample_n(ENEM_2018, nrow(ENEM_2018)/fraction)
+
+# ADDING ANO
+ENEM_2018$ano <- 2018
+
+# SAVE file in compressed mode
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(ENEM_2018, "data/r_full_subsamples/ENEM_2018", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#           ITENS 2018
+#--------------------------------------------------------
+
+# Carrega os microdados
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2018/DADOS")
+itens_2018 <- data.table::fread(input='ITENS_PROVA_2018.csv',integer64='character')
+
+itens_2018$SG_AREA <- factor(itens_2018$SG_AREA, levels = c('CH','CN','LC','MT'),
+                             labels=c('Ciências Humanas','Ciências da Natureza','Linguagens e Códigos','Matemática'))
+itens_2018$TP_LINGUA <- factor(itens_2018$TP_LINGUA, levels = c(0,1),  labels=c('Inglês','Espanhol'))
+itens_2018$IN_ITEM_ADAPTADO <- factor(itens_2018$IN_ITEM_ADAPTADO, levels = c(1,0),  labels=c('Sim','Não'))
+
+#keep only math items and relevant variables
+itens_2018 <-itens_2018[itens_2018$SG_AREA == "Matemática", ]
+itens_2018$ano <- 2018
+itens_2018   <- subset(itens_2018, select = -c(TP_LINGUA, IN_ITEM_ADAPTADO))
+
+
+#write fast-reading file
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(itens_2018, "data/r_full_subsamples/itens_2018", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#     MICRODADOS 2017
+#--------------------------------------------------------
+
+
+
+#carrega os microdados
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2017/DADOS")
+ENEM_2017 <- data.table::fread(input='MICRODADOS_ENEM_2017.csv',
+                               integer64='character',
+                               skip=0,  #Ler do inicio
+                               nrow=-1, #Ler todos os registros
+                               na.strings = "", 
+                               showProgress = TRUE,
+                               select = c("NU_INSCRICAO", 
+                                          "CO_PROVA_MT", 
+                                          "TX_RESPOSTAS_MT",
+                                          "TX_GABARITO_MT",
+                                          "TP_COR_RACA",
+                                          "TP_ST_CONCLUSAO",
+                                          "TP_ESCOLA",
+                                          "NU_NOTA_CN",
+                                          "NU_NOTA_CH",
+                                          "NU_NOTA_LC",
+                                          "NU_NOTA_MT"))
+
+#standardize variables' names
+names(ENEM_2017)[names(ENEM_2017) == 'NU_NOTA_CN'] <- 'NOTA_CN'
+names(ENEM_2017)[names(ENEM_2017) == 'NU_NOTA_CH'] <- 'NOTA_CH'
+names(ENEM_2017)[names(ENEM_2017) == 'NU_NOTA_LC'] <- 'NOTA_LC'
+names(ENEM_2017)[names(ENEM_2017) == 'NU_NOTA_MT'] <- 'NOTA_MT'
+
+#label Raça
+ENEM_2017$TP_COR_RACA <- factor(ENEM_2017$TP_COR_RACA, levels = c(0,1,2,3,4,5,6),
+                                labels=c('Não declarado',
+                                         'Branca','Preta',
+                                         'Parda','Amarela',
+                                         'Indígena',
+                                         'Não dispõe da informação'))
+
+#label School
+ENEM_2017$TP_ESCOLA <- factor(ENEM_2017$TP_ESCOLA, levels = c(1,2,3,4),
+                              labels=c('Não respondeu',
+                                       'Pública',
+                                       'Privada',
+                                       'Exterior'))
+
+
+# GETTING A SMALL SUBSAMPLE (10% of non-missing 12th graders)
+#ENEM_2017 <- na.omit(ENEM_2017)
+ENEM_2017 <- sample_n(ENEM_2017, nrow(ENEM_2017)/fraction)
+
+# ADDING ANO
+ENEM_2017$ano <- 2017
+
+
+# SAVE file in compressed mode
+library(fst)
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(ENEM_2017, "data/r_full_subsamples/ENEM_2017", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#           ITENS 2017
+#--------------------------------------------------------
+
+# Carrega os itens
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2017/DADOS")
+itens_2017 <- data.table::fread(input='ITENS_PROVA_2017.csv',integer64='character')
+
+#keep only math items
+itens_2017 <-itens_2017[itens_2017$SG_AREA == "MT", ]
+itens_2017$ano <- 2017
+itens_2017   <- subset(itens_2017, select = -c(TP_LINGUA, IN_ITEM_ADAPTADO))
+
+#co_posição is coded diferently for 2012/16/17 (starts from 1) and needs to be adjusted (to start from 136)
+itens_2017$CO_POSICAO   <- itens_2017$CO_POSICAO+135
+
+#write fast-reading file
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(itens_2017, "data/r_full_subsamples/itens_2017", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#     MICRODADOS 2016
+#--------------------------------------------------------
+
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2016/DADOS")
+
+ENEM_2016 <- data.table::fread(input='microdados_enem_2016.csv',
+                               integer64='character',
+                               skip=0,  #Ler do inicio
+                               nrow=-1, #Ler todos os registros
+                               na.strings = "", 
+                               showProgress = TRUE,
+                               select = c("NU_INSCRICAO", 
+                                          "CO_PROVA_MT", 
+                                          "TX_RESPOSTAS_MT",
+                                          "TX_GABARITO_MT",
+                                          "TP_COR_RACA",
+                                          "TP_ST_CONCLUSAO",
+                                          "TP_ESCOLA",
+                                          "NU_NOTA_CN",
+                                          "NU_NOTA_CH",
+                                          "NU_NOTA_LC",
+                                          "NU_NOTA_MT"))
+
+#standardize variables' names
+names(ENEM_2016)[names(ENEM_2016) == 'NU_NOTA_CN'] <- 'NOTA_CN'
+names(ENEM_2016)[names(ENEM_2016) == 'NU_NOTA_CH'] <- 'NOTA_CH'
+names(ENEM_2016)[names(ENEM_2016) == 'NU_NOTA_LC'] <- 'NOTA_LC'
+names(ENEM_2016)[names(ENEM_2016) == 'NU_NOTA_MT'] <- 'NOTA_MT'
+
+#label Raça
+ENEM_2016$TP_COR_RACA <- factor(ENEM_2016$TP_COR_RACA, levels = c(0,1,2,3,4,5,6),
+                                labels=c('Não declarado',
+                                         'Branca','Preta',
+                                         'Parda','Amarela',
+                                         'Indígena',
+                                         'Não dispõe da informação'))
+
+#label School
+ENEM_2016$TP_ESCOLA <- factor(ENEM_2016$TP_ESCOLA, levels = c(1,2,3,4),
+                              labels=c('Não respondeu',
+                                       'Pública',
+                                       'Privada',
+                                       'Exterior'))
+
+# GETTING A SMALL SUBSAMPLE (10% of non-missing 12th graders)
+#ENEM_2016 <- na.omit(ENEM_2016)
+ENEM_2016 <- sample_n(ENEM_2016, nrow(ENEM_2016)/fraction)
+
+# ADDING ANO
+ENEM_2016$ano <- 2016
+
+# SAVE file in compressed mode
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(ENEM_2016, "data/r_full_subsamples/ENEM_2016", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#           ITENS 2016
+#--------------------------------------------------------
+
+#Carrega os itens
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2016/DADOS")
+itens_2016 <- data.table::fread(input='itens_prova_2016.csv',integer64='character')
+
+#keep only math items and relevant variables
+itens_2016 <-itens_2016[itens_2016$SG_AREA == "MT", ]
+itens_2016$ano <- 2016
+itens_2016   <- subset(itens_2016, select = -c(TP_LINGUA, IN_ITEM_ADAPTADO))
+
+#co_posição is coded diferently for 2012/16/17 (starts from 1) and needs to be adjusted (to start from 136)
+itens_2016$CO_POSICAO   <- itens_2016$CO_POSICAO+135
+
+#write fast-reading file
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(itens_2016, "data/r_full_subsamples/itens_2016", compress = 50, uniform_encoding = TRUE)
+
+#--------------------------------------------------------
+#     MICRODADOS 2015
+#--------------------------------------------------------
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2015/DADOS")
+
+ENEM_2015 <- data.table::fread(input='microdados_enem_2015.csv',
+                               integer64='character',
+                               skip=0,  #Ler do inicio
+                               nrow=-1, #Ler todos os registros
+                               na.strings = "", 
+                               showProgress = TRUE,
+                               select = c("NU_INSCRICAO", 
+                                          "CO_PROVA_MT", 
+                                          "TX_RESPOSTAS_MT",
+                                          "TX_GABARITO_MT",
+                                          "TP_COR_RACA",
+                                          "TP_ST_CONCLUSAO",
+                                          "TP_ESCOLA",
+                                          "NU_NOTA_CN",
+                                          "NU_NOTA_CH",
+                                          "NU_NOTA_LC",
+                                          "NU_NOTA_MT"))
+
+#standardize variables' names
+names(ENEM_2015)[names(ENEM_2015) == 'NU_NOTA_CN'] <- 'NOTA_CN'
+names(ENEM_2015)[names(ENEM_2015) == 'NU_NOTA_CH'] <- 'NOTA_CH'
+names(ENEM_2015)[names(ENEM_2015) == 'NU_NOTA_LC'] <- 'NOTA_LC'
+names(ENEM_2015)[names(ENEM_2015) == 'NU_NOTA_MT'] <- 'NOTA_MT'
+
+#label Raça
+ENEM_2015$TP_COR_RACA <- factor(ENEM_2015$TP_COR_RACA, levels = c(0,1,2,3,4,5,6),
+                                labels=c('Não declarado',
+                                         'Branca','Preta',
+                                         'Parda','Amarela',
+                                         'Indígena',
+                                         'Não dispõe da informação'))
+
+#label School
+ENEM_2015$TP_ESCOLA <- factor(ENEM_2015$TP_ESCOLA, levels = c(1,2,3,4),
+                              labels=c('Não respondeu',
+                                       'Pública',
+                                       'Privada',
+                                       'Exterior'))
+
+# GETTING A SMALL SUBSAMPLE (10% of non-missing 12th graders)
+#ENEM_2015 <- na.omit(ENEM_2015)
+ENEM_2015 <- sample_n(ENEM_2015, nrow(ENEM_2015)/fraction)
+
+# ADDING ANO
+ENEM_2015$ano <- 2015
+
+# SAVE file in compressed mode
+library(fst)
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(ENEM_2015, "data/r_full_subsamples/ENEM_2015", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#           ITENS 2015
+#--------------------------------------------------------
+
+# Carrega os itens
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2015/DADOS")
+itens_2015 <- data.table::fread(input='ITENS_ENEM_2015_EDITED_FOR_R.csv',integer64='character')
+
+#keep only math items
+itens_2015 <-itens_2015[itens_2015$SG_AREA == "MT", ]
+itens_2015$ano <- 2015
+
+#write fast-reading file
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(itens_2015, "data/r_full_subsamples/itens_2015", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#     MICRODADOS 2014
+#--------------------------------------------------------
+rm(list = ls())
+fraction <- 1 
+#Load data
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2014/DADOS")
+
+ENEM_2014 <- data.table::fread(input='microdados_enem_2014.csv',
+                               integer64='character',
+                               skip=0,  #Ler do inicio
+                               nrow=-1, #Ler todos os registros
+                               na.strings = "", 
+                               showProgress = TRUE,
+                               select = c("NU_INSCRICAO", 
+                                          "ID_PROVA_MT", 
+                                          "TX_RESPOSTAS_MT",
+                                          "GABARITO_MT",
+                                          "TP_COR_RACA",
+                                          "ST_CONCLUSAO",
+                                          "TP_ESCOLA",
+                                          "NOTA_CN",
+                                          "NOTA_CH",
+                                          "NOTA_LC",
+                                          "NOTA_MT"))
+
+#Standardize variables names
+names(ENEM_2014)[names(ENEM_2014) == 'ID_PROVA_MT'] <- 'CO_PROVA_MT'
+names(ENEM_2014)[names(ENEM_2014) == 'GABARITO_MT'] <- 'TX_GABARITO_MT'
+names(ENEM_2014)[names(ENEM_2014) == 'ST_CONCLUSAO'] <- 'TP_ST_CONCLUSAO'
+
+#label Raça
+ENEM_2014$TP_COR_RACA <- factor(ENEM_2014$TP_COR_RACA, levels = c(0,1,2,3,4,5,6),
+                                labels=c('Não declarado',
+                                         'Branca','Preta',
+                                         'Parda','Amarela',
+                                         'Indígena',
+                                         'Não dispõe da informação'))
+
+#label School
+ENEM_2014$TP_ESCOLA <- factor(ENEM_2014$TP_ESCOLA, levels = c(1,2),
+                              labels=c('Pública','Privada'))
+
+
+# GETTING A SMALL SUBSAMPLE (10% of non-missing 12th graders)
+#ENEM_2014 <- na.omit(ENEM_2014)
+ENEM_2014 <- sample_n(ENEM_2014, nrow(ENEM_2014)/fraction)
+
+# ADDING ANO
+ENEM_2014$ano <- 2014
+
+# SAVE file in compressed mode
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(ENEM_2014, "data/r_full_subsamples/ENEM_2014", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#           ITENS 2014
+#--------------------------------------------------------
+
+# Carrega dos microdados
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2014/DADOS")
+itens_2014 <- data.table::fread(input='ITENS_ENEM_2014_EDITED_FOR_R.csv',integer64='character')
+
+#keep only math items
+itens_2014 <-itens_2014[itens_2014$SG_AREA == "MT", ]
+itens_2014$ano <- 2014
+
+#write fast-reading file
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(itens_2014, "data/r_full_subsamples/itens_2014", compress = 50, uniform_encoding = TRUE)
+
+#--------------------------------------------------------
+#     MICRODADOS 2013
+#--------------------------------------------------------
+rm(list = ls())
+fraction <- 1 
+#load data
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2013/DADOS")
+
+ENEM_2013 <- data.table::fread(input='microdados_enem_2013.csv',
+                               integer64='character',
+                               skip=0,  #Ler do inicio
+                               nrow=-1, #Ler todos os registros
+                               na.strings = "", 
+                               showProgress = TRUE,
+                               select = c("NU_INSCRICAO", 
+                                          "ID_PROVA_MT", 
+                                          "TX_RESPOSTAS_MT",
+                                          "GABARITO_MT",
+                                          "TP_COR_RACA",
+                                          "ST_CONCLUSAO",
+                                          "TP_ESCOLA",
+                                          "NOTA_CN",
+                                          "NOTA_CH",
+                                          "NOTA_LC",
+                                          "NOTA_MT"))
+
+#standardize variables names
+names(ENEM_2013)[names(ENEM_2013) == 'ID_PROVA_MT'] <- 'CO_PROVA_MT'
+names(ENEM_2013)[names(ENEM_2013) == 'GABARITO_MT'] <- 'TX_GABARITO_MT'
+names(ENEM_2013)[names(ENEM_2013) == 'ST_CONCLUSAO'] <- 'TP_ST_CONCLUSAO'
+
+#label Raça
+ENEM_2013$TP_COR_RACA <- factor(ENEM_2013$TP_COR_RACA, levels = c(0,1,2,3,4,5,6),
+                                labels=c('Não declarado',
+                                         'Branca','Preta',
+                                         'Parda','Amarela',
+                                         'Indígena',
+                                         'Não dispõe da informação'))
+
+#label School
+ENEM_2013$TP_ESCOLA <- factor(ENEM_2013$TP_ESCOLA, levels = c(1,2),
+                              labels=c('Pública','Privada'))
+
+
+# GETTING A SMALL SUBSAMPLE (10% of non-missing 12th graders)
+#ENEM_2013 <- na.omit(ENEM_2013)
+ENEM_2013 <- sample_n(ENEM_2013, nrow(ENEM_2013)/fraction)
+
+# ADDING ANO
+ENEM_2013$ano <- 2013
+
+# SAVE file in compressed mode
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(ENEM_2013, "data/r_full_subsamples/ENEM_2013", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#           ITENS 2013
+#--------------------------------------------------------
+
+# Carrega dos microdados
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2013/DADOS")
+itens_2013 <- data.table::fread(input='ITENS_ENEM_2013_EDITED_FOR_R.csv',integer64='character')
+
+#keep only math items
+itens_2013 <-itens_2013[itens_2013$SG_AREA == "MT", ]
+itens_2013$ano <- 2013
+
+#write fast-reading file
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(itens_2013, "data/r_full_subsamples/itens_2013", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#     MICRODADOS 2012
+#--------------------------------------------------------
+rm(list = ls())
+fraction <- 1 
+#load data
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2012/DADOS")
+ENEM_2012 <- data.table::fread(input='dados_enem_2012.csv',
+                               integer64='character',
+                               skip=0,  #Ler do inicio
+                               nrow=-1, #Ler todos os registros
+                               na.strings = "", 
+                               showProgress = TRUE,
+                               select = c("NU_INSCRICAO", 
+                                          "ID_PROVA_MT", 
+                                          "TX_RESPOSTAS_MT",
+                                          "DS_GABARITO_MT",
+                                          "TP_COR_RACA",
+                                          "ST_CONCLUSAO",
+                                          "TP_ESCOLA",
+                                          "NU_NT_CN",
+                                          "NU_NT_CH",
+                                          "NU_NT_LC",
+                                          "NU_NT_MT"))
+
+#standardize variables' names
+names(ENEM_2012)[names(ENEM_2012) == 'ID_PROVA_MT'] <- 'CO_PROVA_MT'
+names(ENEM_2012)[names(ENEM_2012) == 'DS_GABARITO_MT'] <- 'TX_GABARITO_MT'
+names(ENEM_2012)[names(ENEM_2012) == 'ST_CONCLUSAO'] <- 'TP_ST_CONCLUSAO'
+
+names(ENEM_2012)[names(ENEM_2012) == 'NU_NT_CN'] <- 'NOTA_CN'
+names(ENEM_2012)[names(ENEM_2012) == 'NU_NT_CH'] <- 'NOTA_CH'
+names(ENEM_2012)[names(ENEM_2012) == 'NU_NT_LC'] <- 'NOTA_LC'
+names(ENEM_2012)[names(ENEM_2012) == 'NU_NT_MT'] <- 'NOTA_MT'
+
+#label Raça
+ENEM_2012$TP_COR_RACA <- factor(ENEM_2012$TP_COR_RACA, levels = c(0,1,2,3,4,5,6),
+                                labels=c('Não declarado',
+                                         'Branca','Preta',
+                                         'Parda','Amarela',
+                                         'Indígena',
+                                         'Não dispõe da informação'))
+
+#label School
+ENEM_2012$TP_ESCOLA <- factor(ENEM_2012$TP_ESCOLA, levels = c(1,2),
+                              labels=c('Pública','Privada'))
+
+
+# GETTING A SMALL SUBSAMPLE (10% of non-missing 12th graders)
+#ENEM_2012 <- na.omit(ENEM_2012)
+ENEM_2012 <- sample_n(ENEM_2012, nrow(ENEM_2012)/fraction)
+
+# ADDING ANO
+ENEM_2012$ano <- 2012
+
+# SAVE file in compressed mode
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(ENEM_2012, "data/r_full_subsamples/ENEM_2012", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#           ITENS 2012
+#--------------------------------------------------------
+
+# Carrega dos microdados
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2012/DADOS")
+itens_2012 <- read.csv("ITENS_ENEM_2012.csv",
+                       colClasses = c("ID_POSICAO" = "character"))
+
+#standardize variables' names
+names(itens_2012)[names(itens_2012) == 'ID_POSICAO']    <- 'CO_POSICAO'
+names(itens_2012)[names(itens_2012) == 'COD_AREA']       <- 'SG_AREA'
+names(itens_2012)[names(itens_2012) == 'ID_ITEM']       <- 'CO_ITEM'
+names(itens_2012)[names(itens_2012) == 'DS_GABARITO']   <- 'TX_GABARITO'
+names(itens_2012)[names(itens_2012) == 'ID_HABILIDADE'] <- 'CO_HABILIDADE'
+names(itens_2012)[names(itens_2012) == 'DS_COR']        <- 'TX_COR'
+names(itens_2012)[names(itens_2012) == 'ID_PROVA']       <- 'CO_PROVA'
+
+#keep only math items
+itens_2012 <-itens_2012[itens_2012$SG_AREA == "MT", ]
+itens_2012$ano <- 2012
+
+#correct variable type
+itens_2012$CO_POSICAO <-   as.integer(itens_2012$CO_POSICAO)
+
+
+#co_posição is coded diferently for 2012/16/17 (starts from 1) and needs to be adjusted (to start from 136)
+itens_2012$CO_POSICAO   <- itens_2012$CO_POSICAO+135
+
+#write fast-reading file
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(itens_2012, "data/r_full_subsamples/itens_2012", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#     MICRODADOS 2011
+#--------------------------------------------------------
+
+rm(list = ls())
+fraction <- 1 
+#load microdata
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2011/DADOS")
+ENEM_2011 <- read_csv("dados_enem_2011.txt", col_names = FALSE)
+
+NU_INSCRICAO     <-  substr(ENEM_2011$X1,   1,  12)
+CO_PROVA_MT      <- as.integer(substr(ENEM_2011$X1, 762, 764))
+TX_RESPOSTAS_MT  <-            substr(ENEM_2011$X1, 708, 752)
+TX_GABARITO_MT   <-            substr(ENEM_2011$X1, 906, 950)
+TP_COR_RACA      <- as.integer(substr(ENEM_2011$X1, 203, 203))
+TP_ST_CONCLUSAO  <- as.integer(substr(ENEM_2011$X1, 180, 180))
+TP_ESCOLA        <- as.integer(substr(ENEM_2011$X1, 371, 371)) #ID_DEPENDENCIA_ADM
+NOTA_CN          <- as.numeric(substr(ENEM_2011$X1, 537, 545))
+NOTA_CH          <- as.numeric(substr(ENEM_2011$X1, 546, 554))
+NOTA_LC          <- as.numeric(substr(ENEM_2011$X1, 555, 563))
+NOTA_MT          <- as.numeric(substr(ENEM_2011$X1, 564, 572))
+
+ENEM_2011  <- data.frame(NU_INSCRICAO,
+                         CO_PROVA_MT,
+                         TX_RESPOSTAS_MT,
+                         TX_GABARITO_MT,
+                         TP_COR_RACA,
+                         TP_ST_CONCLUSAO,
+                         TP_ESCOLA,
+                         NOTA_CN, 
+                         NOTA_CH, 
+                         NOTA_LC, 
+                         NOTA_MT)
+
+remove(NU_INSCRICAO,
+       CO_PROVA_MT,
+       TX_RESPOSTAS_MT,
+       TX_GABARITO_MT,
+       TP_COR_RACA,
+       TP_ST_CONCLUSAO,
+       TP_ESCOLA,
+       NOTA_CN, 
+       NOTA_CH, 
+       NOTA_LC, 
+       NOTA_MT)
+
+
+#label Raça
+ENEM_2011$TP_COR_RACA <- factor(ENEM_2011$TP_COR_RACA, levels = c(0,1,2,3,4,5,6),
+                                labels=c('Não declarado',
+                                         'Branca','Preta',
+                                         'Parda','Amarela',
+                                         'Indígena',
+                                         'Não dispõe da informação'))
+
+#label School
+
+# Original codes from  variable ID_DEPENDENCIA_ADM
+#1	Federal | 2	Estadual | 3	Municipal | 4	Privada
+
+ENEM_2011$TP_ESCOLA[ENEM_2011$TP_ESCOLA == 2] <- 1
+ENEM_2011$TP_ESCOLA[ENEM_2011$TP_ESCOLA == 3] <- 1
+ENEM_2011$TP_ESCOLA[ENEM_2011$TP_ESCOLA == 4] <- 2
+
+ENEM_2011$TP_ESCOLA <- factor(ENEM_2011$TP_ESCOLA, levels = c(1,2),
+                              labels=c('Pública','Privada'))
+
+# GETTING A SMALL SUBSAMPLE (10% of non-missing 12th graders)
+#ENEM_2011 <- na.omit(ENEM_2011)
+ENEM_2011 <- sample_n(ENEM_2011, nrow(ENEM_2011)/fraction)
+
+# ADDING ANO
+ENEM_2011$ano <- 2011
+
+# SAVE file in compressed mode
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(ENEM_2011, "data/r_full_subsamples/ENEM_2011", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#           ITENS 2011
+#--------------------------------------------------------
+
+# Carrega dos microdados
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2011/DADOS")
+itens_2011 <- read_csv("ITENS_PROVA_2011.txt", col_names = FALSE)
+
+# Load fixed-column data (DIFFERENT THAN OTHER YEARS!) and delete first input
+itens_2011$CO_POSICAO    <- as.integer(substr(itens_2011$X1, 1, 3))
+itens_2011$SG_AREA       <-            substr(itens_2011$X1, 4, 5)
+itens_2011$CO_ITEM       <- as.integer(substr(itens_2011$X1, 6,10))
+itens_2011$TX_GABARITO   <-            substr(itens_2011$X1,11,11)
+itens_2011$CO_HABILIDADE <- as.integer(substr(itens_2011$X1,12,13))
+itens_2011$TX_COR        <-            substr(itens_2011$X1,14,20)
+itens_2011$CO_PROVA      <- as.integer(substr(itens_2011$X1,21,23))
+
+itens_2011 <- subset(itens_2011, select = c(CO_POSICAO, SG_AREA, 
+                                            CO_ITEM,TX_GABARITO,
+                                            CO_HABILIDADE, TX_COR, 
+                                            CO_PROVA))
+
+#keep only math items
+itens_2011 <-itens_2011[itens_2011$SG_AREA == "MT", ]
+itens_2011$ano <- 2011
+
+itens_2011$CO_POSICAO <-   as.integer(itens_2011$CO_POSICAO)
+
+#write fast-reading file
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(itens_2011, "data/r_full_subsamples/itens_2011", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#     MICRODADOS 2010
+#--------------------------------------------------------
+
+#load microdata
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2010/DADOS")
+ENEM_2010 <- data.table::fread(input='MICRODADOS_ENEM_2010.csv',
+                               integer64='character',
+                               skip=0,  #Ler do inicio
+                               nrow=-1, #Ler todos os registros
+                               na.strings = "", 
+                               showProgress = TRUE,
+                               select = c("NU_INSCRICAO", 
+                                          "CO_PROVA_MT", 
+                                          "TX_RESPOSTAS_MT",
+                                          "TX_GABARITO_MT",
+                                          "TP_COR_RACA",
+                                          "TP_ST_CONCLUSAO",
+                                          "TP_DEPENDENCIA_ADM_ESC",
+                                          "NU_NOTA_CN",
+                                          "NU_NOTA_CH",
+                                          "NU_NOTA_LC",
+                                          "NU_NOTA_MT"))
+
+#standardize variables' names
+names(ENEM_2010)[names(ENEM_2010) == 'NU_NOTA_CN'] <- 'NOTA_CN'
+names(ENEM_2010)[names(ENEM_2010) == 'NU_NOTA_CH'] <- 'NOTA_CH'
+names(ENEM_2010)[names(ENEM_2010) == 'NU_NOTA_LC'] <- 'NOTA_LC'
+names(ENEM_2010)[names(ENEM_2010) == 'NU_NOTA_MT'] <- 'NOTA_MT'
+
+# Original codes from  variable TP_DEPENDENCIA_ADM_ESC
+#1	Federal | 2	Estadual | 3	Municipal | 4	Privada
+names(ENEM_2010)[names(ENEM_2010) == 'TP_DEPENDENCIA_ADM_ESC'] <- 'TP_ESCOLA'
+
+ENEM_2010$TP_ESCOLA[ENEM_2010$TP_ESCOLA == 2] <- 1
+ENEM_2010$TP_ESCOLA[ENEM_2010$TP_ESCOLA == 3] <- 1
+ENEM_2010$TP_ESCOLA[ENEM_2010$TP_ESCOLA == 4] <- 2
+
+ENEM_2010$TP_ESCOLA <- factor(ENEM_2010$TP_ESCOLA, levels = c(1,2),
+                              labels=c('Pública','Privada'))
+
+#label Raça
+ENEM_2010$TP_COR_RACA <- factor(ENEM_2010$TP_COR_RACA, levels = c(0,1,2,3,4,5,6),
+                                labels=c('Não declarado',
+                                         'Branca','Preta',
+                                         'Parda','Amarela',
+                                         'Indígena',
+                                         'Não dispõe da informação'))
+
+# GETTING A SMALL SUBSAMPLE (10% of non-missing 12th graders)
+#ENEM_2010 <- na.omit(ENEM_2010)
+ENEM_2010 <- sample_n(ENEM_2010, nrow(ENEM_2010)/fraction)
+
+# ADDING ANO
+ENEM_2010$ano <- 2010
+
+# SAVE file in compressed mode
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(ENEM_2010, "data/r_full_subsamples/ENEM_2010", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#           ITENS 2010
+#--------------------------------------------------------
+
+# Carrega os microdados
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2010/DADOS")
+itens_2010 <- data.table::fread(input='ITENS_PROVA_2010.csv',integer64='character')
+
+itens_2010$SG_AREA <- factor(itens_2010$SG_AREA, levels = c('CH','CN','LC','MT'),  labels=c('Ciências Humanas','Ciências da Natureza','Linguagens e Códigos','Matemática'))
+itens_2010$TP_LINGUA <- factor(itens_2010$TP_LINGUA, levels = c(0,1),  labels=c('Inglês','Espanhol'))
+itens_2010$IN_ITEM_ADAPTADO <- factor(itens_2010$IN_ITEM_ADAPTADO, levels = c(1,0),  labels=c('Sim','Não'))
+
+#keep only math items and relevant variables
+itens_2010 <-itens_2010[itens_2010$SG_AREA == "Matemática", ]
+itens_2010$ano <- 2010
+itens_2010   <- subset(itens_2010, select = -c(TP_LINGUA, IN_ITEM_ADAPTADO))
+
+#write fast-reading file
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(itens_2010, "data/r_full_subsamples/itens_2010", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#     MICRODADOS 2009
+#--------------------------------------------------------
+
+#load microdata
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2009/DADOS")
+ENEM_2009 <- data.table::fread(input='MICRODADOS_ENEM_2009.csv',
+                               integer64='character',
+                               skip=0,  #Ler do inicio
+                               nrow=-1, #Ler todos os registros
+                               na.strings = "", 
+                               showProgress = TRUE,
+                               select = c("NU_INSCRICAO", 
+                                          "CO_PROVA_MT", 
+                                          "TX_RESPOSTAS_MT",
+                                          "TX_GABARITO_MT",
+                                          "Q3",
+                                          "TP_ST_CONCLUSAO",
+                                          "TP_DEPENDENCIA_ADM_ESC",
+                                          "NU_NOTA_CN",
+                                          "NU_NOTA_CH",
+                                          "NU_NOTA_LC",
+                                          "NU_NOTA_MT"))
+
+#standardize variables' names
+names(ENEM_2009)[names(ENEM_2009) == 'NU_NOTA_CN'] <- 'NOTA_CN'
+names(ENEM_2009)[names(ENEM_2009) == 'NU_NOTA_CH'] <- 'NOTA_CH'
+names(ENEM_2009)[names(ENEM_2009) == 'NU_NOTA_LC'] <- 'NOTA_LC'
+names(ENEM_2009)[names(ENEM_2009) == 'NU_NOTA_MT'] <- 'NOTA_MT'
+
+names(ENEM_2009)[names(ENEM_2009) == 'Q3'] <- 'TP_COR_RACA'
+names(ENEM_2009)[names(ENEM_2009) == 'TP_DEPENDENCIA_ADM_ESC'] <- 'TP_ESCOLA'
+
+# Original codes from  variable TP_DEPENDENCIA_ADM_ESC
+#1	Federal | 2	Estadual | 3	Municipal | 4	Privada
+
+ENEM_2009$TP_ESCOLA[ENEM_2009$TP_ESCOLA == 2] <- 1
+ENEM_2009$TP_ESCOLA[ENEM_2009$TP_ESCOLA == 3] <- 1
+ENEM_2009$TP_ESCOLA[ENEM_2009$TP_ESCOLA == 4] <- 2
+
+ENEM_2009$TP_ESCOLA <- factor(ENEM_2009$TP_ESCOLA, levels = c(1,2),
+                              labels=c('Pública','Privada'))
+
+#label Raça
+ENEM_2009$TP_COR_RACA[ENEM_2009$TP_COR_RACA == "*"] <- "0"
+ENEM_2009$TP_COR_RACA[ENEM_2009$TP_COR_RACA == "."] <- "0"
+ENEM_2009$TP_COR_RACA[ENEM_2009$TP_COR_RACA == "A"] <- "1"
+ENEM_2009$TP_COR_RACA[ENEM_2009$TP_COR_RACA == "B"] <- "3"
+ENEM_2009$TP_COR_RACA[ENEM_2009$TP_COR_RACA == "C"] <- "2"
+ENEM_2009$TP_COR_RACA[ENEM_2009$TP_COR_RACA == "D"] <- "4"
+ENEM_2009$TP_COR_RACA[ENEM_2009$TP_COR_RACA == "E"] <- "5"
+
+#label Raça
+ENEM_2009$TP_COR_RACA <- factor(ENEM_2009$TP_COR_RACA, levels = c(0,1,2,3,4,5,6),
+                                labels=c('Não declarado',
+                                         'Branca','Preta',
+                                         'Parda','Amarela',
+                                         'Indígena',
+                                         'Não dispõe da informação'))
+
+# GETTING A SMALL SUBSAMPLE (10% of non-missing 12th graders)
+#ENEM_2009 <- na.omit(ENEM_2009)
+ENEM_2009 <- sample_n(ENEM_2009, nrow(ENEM_2009)/fraction)
+
+# ADDING ANO
+ENEM_2009$ano <- 2009
+
+# SAVE file in compressed mode
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(ENEM_2009, "data/r_full_subsamples/ENEM_2009", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#           ITENS 2009
+#--------------------------------------------------------
+
+# Carga dos microdados
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/2. original data/MEC data/microdados_enem2009/DADOS")
+itens_2009 <- data.table::fread(input='ITENS_PROVA_2009.csv',integer64='character')
+
+itens_2009$SG_AREA <- factor(itens_2009$SG_AREA, levels = c('CH','CN','LC','MT'),  labels=c('Ciências Humanas','Ciências da Natureza','Linguagens e Códigos','Matemática'))
+itens_2009$TP_LINGUA <- factor(itens_2009$TP_LINGUA, levels = c(0,1),  labels=c('Inglês','Espanhol'))
+itens_2009$IN_ITEM_ADAPTADO <- factor(itens_2009$IN_ITEM_ADAPTADO, levels = c(1,0),  labels=c('Sim','Não'))
+
+#keep only math items and relevant variables
+itens_2009 <-itens_2009[itens_2009$SG_AREA == "Matemática", ]
+itens_2009$ano <- 2009
+itens_2009   <- subset(itens_2009, select = -c(TP_LINGUA, IN_ITEM_ADAPTADO))
+
+#write fast-reading file
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R")
+write_fst(itens_2009, "data/r_full_subsamples/itens_2009", compress = 50, uniform_encoding = TRUE)
+
+
+#--------------------------------------------------------
+#           MERGE ITEMS AND CLASSIFY COMBINATORICS ITEMS 
+#--------------------------------------------------------
+# read  Enem microdata files (already clean and small with only relevant columns and nonmissing data)
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R/data/r_full_subsamples")
+ENEM_2020 <- read_fst("ENEM_2020", c("CO_PROVA_MT", "TP_COR_RACA", "TP_ST_CONCLUSAO", "TP_ESCOLA", "NOTA_MT", "TX_RESPOSTAS_MT", "TX_GABARITO_MT", "ano")) 
+ENEM_2019 <- read_fst("ENEM_2019", c("CO_PROVA_MT", "TP_COR_RACA", "TP_ST_CONCLUSAO", "TP_ESCOLA", "NOTA_MT", "TX_RESPOSTAS_MT", "TX_GABARITO_MT", "ano")) 
+ENEM_2018 <- read_fst("ENEM_2018", c("CO_PROVA_MT", "TP_COR_RACA", "TP_ST_CONCLUSAO", "TP_ESCOLA", "NOTA_MT", "TX_RESPOSTAS_MT", "TX_GABARITO_MT", "ano")) 
+ENEM_2017 <- read_fst("ENEM_2017", c("CO_PROVA_MT", "TP_COR_RACA", "TP_ST_CONCLUSAO", "TP_ESCOLA", "NOTA_MT", "TX_RESPOSTAS_MT", "TX_GABARITO_MT", "ano")) 
+ENEM_2016 <- read_fst("ENEM_2016", c("CO_PROVA_MT", "TP_COR_RACA", "TP_ST_CONCLUSAO", "TP_ESCOLA", "NOTA_MT", "TX_RESPOSTAS_MT", "TX_GABARITO_MT", "ano")) 
+ENEM_2015 <- read_fst("ENEM_2015", c("CO_PROVA_MT", "TP_COR_RACA", "TP_ST_CONCLUSAO", "TP_ESCOLA", "NOTA_MT", "TX_RESPOSTAS_MT", "TX_GABARITO_MT", "ano")) 
+ENEM_2014 <- read_fst("ENEM_2014", c("CO_PROVA_MT", "TP_COR_RACA", "TP_ST_CONCLUSAO", "TP_ESCOLA", "NOTA_MT", "TX_RESPOSTAS_MT", "TX_GABARITO_MT", "ano")) 
+ENEM_2013 <- read_fst("ENEM_2013", c("CO_PROVA_MT", "TP_COR_RACA", "TP_ST_CONCLUSAO", "TP_ESCOLA", "NOTA_MT", "TX_RESPOSTAS_MT", "TX_GABARITO_MT", "ano")) 
+ENEM_2012 <- read_fst("ENEM_2012", c("CO_PROVA_MT", "TP_COR_RACA", "TP_ST_CONCLUSAO", "TP_ESCOLA", "NOTA_MT", "TX_RESPOSTAS_MT", "TX_GABARITO_MT", "ano")) 
+ENEM_2011 <- read_fst("ENEM_2011", c("CO_PROVA_MT", "TP_COR_RACA", "TP_ST_CONCLUSAO", "TP_ESCOLA", "NOTA_MT", "TX_RESPOSTAS_MT", "TX_GABARITO_MT", "ano")) 
+ENEM_2010 <- read_fst("ENEM_2010", c("CO_PROVA_MT", "TP_COR_RACA", "TP_ST_CONCLUSAO", "TP_ESCOLA", "NOTA_MT", "TX_RESPOSTAS_MT", "TX_GABARITO_MT", "ano")) 
+ENEM_2009 <- read_fst("ENEM_2009", c("CO_PROVA_MT", "TP_COR_RACA", "TP_ST_CONCLUSAO", "TP_ESCOLA", "NOTA_MT", "TX_RESPOSTAS_MT", "TX_GABARITO_MT", "ano")) 
+
+ENEM <- rbind(ENEM_2020,ENEM_2019, ENEM_2018,ENEM_2017, ENEM_2016,ENEM_2015,ENEM_2014,ENEM_2013,ENEM_2012,ENEM_2011,ENEM_2010,ENEM_2009)
+remove(ENEM_2020,ENEM_2019, ENEM_2018,ENEM_2017, ENEM_2016,ENEM_2015,ENEM_2014,ENEM_2013,ENEM_2012,ENEM_2011,ENEM_2010,ENEM_2009)
+ENEM$NOTA_MT <- as.numeric(ENEM$NOTA_MT)
+
+
+# save unclean data EVEN WITH PEOPLE WITH MISSING DATA 
+write_fst(ENEM, "ENEM_complete", compress = 50, uniform_encoding = TRUE)
+
+# Clean data
+ENEM <-na.omit(ENEM)                    # delete anyone with missing data (people who answered "i don't know" remain in the sample) 
+ENEM <-ENEM[ENEM$NOTA_MT != 0,]         # delete people with zero score for math (probably showed up but filled the answer sheet wrong)
+ENEM <-ENEM[ENEM$TP_ST_CONCLUSAO == 2,]  # keep only people finishing HS in the current year
+ENEM <-ENEM[ENEM$TP_ESCOLA == "Pública" | ENEM$TP_ESCOLA == "Privada",]  # keep only people finishing HS in the current year
+
+
+# Load Items
+itens_2020   <- read_fst("itens_2020")
+itens_2019   <- read_fst("itens_2019")
+itens_2018   <- read_fst("itens_2018")
+itens_2017   <- read_fst("itens_2017")
+itens_2016   <- read_fst("itens_2016")
+itens_2015   <- read_fst("itens_2015")
+itens_2014   <- read_fst("itens_2014")
+itens_2013   <- read_fst("itens_2013")
+itens_2012   <- read_fst("itens_2012")
+itens_2011   <- read_fst("itens_2011")
+itens_2010   <- read_fst("itens_2010")
+itens_2009   <- read_fst("itens_2009")
+
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R/data")
+item_domain  <- read.csv("ENEM_item_domain.csv")
+
+# append year data in a single file  
+items <- rbind(itens_2020,itens_2019,itens_2018,itens_2017,itens_2016,itens_2015, itens_2014,itens_2013, itens_2012, itens_2011,itens_2010, itens_2009)
+remove(itens_2020,itens_2019,itens_2018,itens_2017,itens_2016,itens_2015,itens_2014, itens_2013,itens_2012,itens_2011, itens_2010,itens_2009)
+
+#create list of items in Combinatorics
+CO_ITEM <- c(	items$CO_ITEM[items$ano == 2020 & items$CO_PROVA == 668 & items$CO_POSICAO == 146]	,
+              items$CO_ITEM[items$ano == 2020 & items$CO_PROVA == 668 & items$CO_POSICAO == 162]	,
+              items$CO_ITEM[items$ano == 2020 & items$CO_PROVA == 668 & items$CO_POSICAO == 167]	,
+              items$CO_ITEM[items$ano == 2020 & items$CO_PROVA == 589 & items$CO_POSICAO == 144]	,
+              items$CO_ITEM[items$ano == 2020 & items$CO_PROVA == 589 & items$CO_POSICAO == 156]	,
+              items$CO_ITEM[items$ano == 2020 & items$CO_PROVA == 589 & items$CO_POSICAO == 161]	,
+              items$CO_ITEM[items$ano == 2019 & items$CO_PROVA == 515 & items$CO_POSICAO == 156]	,
+              items$CO_ITEM[items$ano == 2019 & items$CO_PROVA == 515 & items$CO_POSICAO == 171]	,
+              items$CO_ITEM[items$ano == 2018 & items$CO_PROVA == 459 & items$CO_POSICAO == 165]	,
+              items$CO_ITEM[items$ano == 2017 & items$CO_PROVA == 403 & items$CO_POSICAO == 143]	,
+              items$CO_ITEM[items$ano == 2017 & items$CO_PROVA == 403 & items$CO_POSICAO == 160]	,
+              items$CO_ITEM[items$ano == 2017 & items$CO_PROVA == 403 & items$CO_POSICAO == 177]	,
+              items$CO_ITEM[items$ano == 2017 & items$CO_PROVA == 403 & items$CO_POSICAO == 178]	,
+              items$CO_ITEM[items$ano == 2016 & items$CO_PROVA == 366 & items$CO_POSICAO == 172]	,
+              items$CO_ITEM[items$ano == 2016 & items$CO_PROVA == 303 & items$CO_POSICAO == 147]	,
+              items$CO_ITEM[items$ano == 2016 & items$CO_PROVA == 303 & items$CO_POSICAO == 168]	,
+              items$CO_ITEM[items$ano == 2015 & items$CO_PROVA == 285 & items$CO_POSICAO == 169]	,
+              items$CO_ITEM[items$ano == 2015 & items$CO_PROVA == 245 & items$CO_POSICAO == 147]	,
+              items$CO_ITEM[items$ano == 2015 & items$CO_PROVA == 245 & items$CO_POSICAO == 164]	,
+              items$CO_ITEM[items$ano == 2014 & items$CO_PROVA == 209 & items$CO_POSICAO == 163]	,
+              items$CO_ITEM[items$ano == 2013 & items$CO_PROVA == 181 & items$CO_POSICAO == 138]	,
+              items$CO_ITEM[items$ano == 2013 & items$CO_PROVA == 181 & items$CO_POSICAO == 165]	,
+              items$CO_ITEM[items$ano == 2012 & items$CO_PROVA == 151 & items$CO_POSICAO == 144]	,
+              items$CO_ITEM[items$ano == 2012 & items$CO_PROVA == 151 & items$CO_POSICAO == 177]	,
+              items$CO_ITEM[items$ano == 2012 & items$CO_PROVA == 151 & items$CO_POSICAO == 178]	,
+              items$CO_ITEM[items$ano == 2011 & items$CO_PROVA == 131 & items$CO_POSICAO == 168]	,
+              items$CO_ITEM[items$ano == 2011 & items$CO_PROVA == 131 & items$CO_POSICAO == 174]	,
+              items$CO_ITEM[items$ano == 2010 & items$CO_PROVA == 99 & items$CO_POSICAO == 173]	,
+              items$CO_ITEM[items$ano == 2009 & items$CO_PROVA == 63 & items$CO_POSICAO == 165]	)
+
+comb_items_list <- data.frame(CO_ITEM)		
+
+# Find combinatorics items and replace them with 1
+items$combinatorics <-0
+for( k in 1:length(comb_items_list$CO_ITEM)){
+        items$combinatorics[items$CO_ITEM == comb_items_list$CO_ITEM[k]] <- 1
+}
+
+
+#just create a new variable and keep original Items variable for the record
+item_data <- items
+
+#delete the digital version done in 2020 (695 696 697 698), libras in 2019(526), 2018
+#also delete the only "videoprova - libras" that would make the threshold (595)
+item_data <- item_data[item_data$CO_PROVA != 695 &
+                               item_data$CO_PROVA != 696 &
+                               item_data$CO_PROVA != 697 &
+                               item_data$CO_PROVA != 698 &
+                               item_data$CO_PROVA != 526 &
+                               item_data$CO_PROVA != 470 &
+                               item_data$CO_PROVA != 414 &
+                               item_data$CO_PROVA != 595,] 
+
+# Delete exams with < 1000 test takers:
+
+# calculating how many test takers in each exam
+for(i in 1:length(item_data[,1])){
+        item_data$n[i]    = sum(ENEM$CO_PROVA_MT == item_data$CO_PROVA[i])
+}
+#delete tests with fewer than 1000 test takers
+item_data <- item_data[item_data$n > 1000,]
+table(item_data$ano)
+
+#CALCULATE ACHIEVEMENT DATA DATA FOR THE GAPS
+for(i in 1:length(item_data[,1])){
+        
+        # i will move line by line on the item_data database
+        
+        # restrict the ENEM sample to people who did the same application of the exam to which the item in line i belongs
+        ENEM_app <- ENEM[ENEM$CO_PROVA_MT == item_data$CO_PROVA[i],]
+        
+        # create a variable indicating who got the question correctly
+        j <- item_data$CO_POSICAO[i]-135 # j is the position of the question in the vector of answers 
+        correct <- as.numeric(substr(ENEM_app$TX_RESPOSTAS_MT,j,j)==substr(ENEM_app$TX_GABARITO_MT,j,j)) #who got it correct
+        
+        # calculate the percent in each group that got it correct
+        item_data$pct[i]= mean(correct)
+        
+        item_data$pct_Black[i]        = mean(correct[ENEM_app$TP_COR_RACA == "Preta"])
+        item_data$pct_White[i]        = mean(correct[ENEM_app$TP_COR_RACA == "Branca"])
+        
+        item_data$pct_Public[i]       = mean(correct[ENEM_app$TP_ESCOLA == "Pública"])  
+        item_data$pct_Private[i]      = mean(correct[ENEM_app$TP_ESCOLA == "Privada"])
+        
+        #calculate correlations
+        item_data$corr_MT[i]= cor(correct,as.numeric(ENEM_app$NOTA_MT))
+        
+}
+
+
+# drop cancelled items
+item_data <- na.omit(item_data)
+
+item_data1 <- item_data
+item_data <- item_data1
+
+
+#--------------------------------------------------
+#    FINAL COMPATIBILITY ADJUSTMENTS
+#---------------------------------------------------
+
+# 'year', 'combinatorics', and 'selected for interview' as factor variables
+item_data$year <- as.factor(item_data$ano) 
+item_data$comb_label <- factor(item_data$combinatorics, levels = c( 0, 1), labels=c('other', 'combinatorics'))
+item_data$comb_label2 <- factor(item_data$combinatorics, levels = c(0,1, 2), labels=c('other', 'combinatorics','selected'))
+item_data$comb_label2[item_data$CO_ITEM == 10547 | item_data$CO_ITEM == 31416 |  item_data$CO_ITEM == 59581 | item_data$CO_ITEM == 60361 | item_data$CO_ITEM == 16076 |
+                        item_data$CO_ITEM == 39708 | item_data$CO_ITEM == 83792  |  item_data$CO_ITEM == 48864] <-"selected"
+
+# create difficulty and gap variables, standardize"TX_COR" AZUL text
+item_data$difficulty <- 1-item_data$pct
+item_data$difficulty2 <- item_data$difficulty^2 
+item_data$race_gap <- (item_data$pct_White - item_data$pct_Black)
+item_data$inv_race_gap <- -(item_data$pct_White - item_data$pct_Black)
+item_data$school_gap <- (item_data$pct_Private - item_data$pct_Public)
+item_data$inv_school_gap <- -(item_data$pct_Private - item_data$pct_Public)
+
+# STANDARDIZE COLOR NAMES
+item_data$TX_COR[item_data$TX_COR == "Cinza  "|item_data$TX_COR == "CINZA"] <- "Cinza"
+item_data$TX_COR[item_data$TX_COR == "AMARELA"|item_data$TX_COR == "AMARELO"| item_data$TX_COR == "Amarelo"] <- "Amarela"
+item_data$TX_COR[item_data$TX_COR == "ROSA"|item_data$TX_COR == "Rosa   "] <- "Rosa"
+item_data$TX_COR[item_data$TX_COR == "Azul   " | item_data$TX_COR == "AZUL"] <-"Azul"
+
+#Correct some variables
+ENEM$TP_COR_RACA[ENEM$TP_COR_RACA ==  "Não dispõe da informação"] <- "Não declarado" #Cor/Raça: Não dispõe (6) --> Não declarado (0)
+# AN ITEM FROM 2017 HAS A REPEATED CODE 60235) WITH AN ITEM FROM 2009. THE ITEM NUMBER IS SIMILAR TO MANY FROM 2009, SO IM KEEPING IT FOR THAT YEAR
+#THAT'S NOT AN ITEM FROM COMBINATORICS, AND GOOGLE TELLS ME THERE WAS NO REPEATED ITEM IN THAT YEAR. SO I CHANGED THE CODE OF THE 2017 ITEM TO "1"
+item_data$CO_ITEM[(item_data$CO_ITEM == 60235 & item_data$ano == 2017)] <- 1
+
+
+#-------------------------------------------------
+#    LENGTH AND NOTATION DATA
+#-------------------------------------------------
+#load hand coded item length and notation 
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R/data")
+question2  <- read.csv("item_length_notation_hand_coded.csv")
+
+#create mask
+question2$mask <-paste(question2$CO_PROVA,question2$CO_POSICAO)
+
+#create codes for merging
+codigos <- as.data.frame(item_data$CO_ITEM)
+colnames(codigos)[colnames(codigos) == 'item_data$CO_ITEM'] <- 'CO_ITEM'
+codigos$mask <- paste(item_data$CO_PROVA,item_data$CO_POSICAO)
+
+#get item codes into question2 dataframe
+question2 <- merge(question2, codigos, by = "mask", all.x = FALSE, all.y = FALSE)
+question2 <- question2[ ,c("words", "notation", "visual", "CO_ITEM")]
+
+#bring length and notation information to item database
+item_data <- merge(item_data, question2, by = "CO_ITEM")
+item_data <- item_data[item_data$TX_COR == "Cinza",] #delete imported items from other exam versions
+
+
+#-------------------------------------------------
+#    INTERVIEW DATA
+#-------------------------------------------------
+item_data$interview <- 0
+
+item_data$interview[item_data$CO_ITEM == 10547] <- 1 # Detective game   1   
+item_data$interview[item_data$CO_ITEM == 12765] <- 1 # Container volume 2
+item_data$interview[item_data$CO_ITEM == 31416] <- 1 # Bank keyword     3
+item_data$interview[item_data$CO_ITEM == 59581] <- 1 # Renting movies   4
+item_data$interview[item_data$CO_ITEM == 41817] <- 1 # Teacher hiring   5
+item_data$interview[item_data$CO_ITEM == 60361] <- 1 # Airplace Seats   6
+item_data$interview[item_data$CO_ITEM == 16076] <- 1 # Father Drawing   7
+item_data$interview[item_data$CO_ITEM == 24787] <- 1 # Scouts tent      8
+item_data$interview[item_data$CO_ITEM == 39708] <- 1 # Volleyball teams 9
+item_data$interview[item_data$CO_ITEM == 83792] <- 1 # Toy train       10
+item_data$interview[item_data$CO_ITEM == 10660] <- 1 # Motorbike trip  11
+item_data$interview[item_data$CO_ITEM == 48864] <- 1 # Paths on Map    12
+
+item_data$name <- ""
+
+item_data$name[item_data$CO_ITEM == 10547] <- "01 Detective game"     
+item_data$name[item_data$CO_ITEM == 12765] <- "02 Container volume"
+item_data$name[item_data$CO_ITEM == 31416] <- "03 Bank keyword"    
+item_data$name[item_data$CO_ITEM == 59581] <- "04 Renting movies"  
+item_data$name[item_data$CO_ITEM == 41817] <- "05 Teacher hiring"  
+item_data$name[item_data$CO_ITEM == 60361] <- "06 Airplace Seats"  
+item_data$name[item_data$CO_ITEM == 16076] <- "07 Father Drawing"  
+item_data$name[item_data$CO_ITEM == 24787] <- "08 Scouts tent"     
+item_data$name[item_data$CO_ITEM == 39708] <- "09 Volleyball teams"
+item_data$name[item_data$CO_ITEM == 83792] <- "10 Toy train"       
+item_data$name[item_data$CO_ITEM == 10660] <- "11 Motorbike trip"  
+item_data$name[item_data$CO_ITEM == 48864] <- "12 Paths on Map"    
+
+
+# create Interviews dataset
+interviews <- subset(item_data, interview == 1)
+interviews$difficulty <- 1-interviews$pct
+interviews$school_gap <- (interviews$pct_Private - interviews$pct_Public)
+interviews$race_gap <- (interviews$pct_White - interviews$pct_Black)
+interviews <- subset(interviews, select=c('name',
+                                          'CO_POSICAO',
+                                          'CO_ITEM',
+                                          'TX_COR',
+                                          'CO_PROVA',
+                                          'ano',
+                                          'combinatorics',
+                                          'n',
+                                          'difficulty',
+                                          'school_gap',
+                                          'race_gap'))
+
+
+
+
+#---------------------------------------------------------
+#          SAVE DATA FILES
+#---------------------------------------------------------
+
+setwd("C:/Users/ferna/OneDrive/Documentos/2. Dissertation/1. R/data/r_full_subsamples")
+write_fst(item_data, "itens", compress = 50, uniform_encoding = TRUE)
+write_fst(ENEM, "ENEM_clean_for_OLS", compress = 50, uniform_encoding = TRUE)
+write_fst(interviews, "interviews", compress = 50, uniform_encoding = TRUE)
+
+
+
+
+
+
+
+
+
+
